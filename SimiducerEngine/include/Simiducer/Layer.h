@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Simiducer/Event.h" // 引入事件系统
 
 namespace Simiducer {
     class Layer {
@@ -19,5 +20,10 @@ namespace Simiducer {
 
         // 【新增】：引擎有任何风吹草动（按键、缩放），都会调用这个函数通知图层
         virtual void OnEvent() {}
+
+        virtual void OnMouseScroll(float offset) {}
+
+        // 【修改】：所有事件都会通过这个统一的入口流进 Layer
+        virtual void OnEvent(Event& event) {}
     };
 }
