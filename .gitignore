@@ -1,0 +1,28 @@
+# --- 编译输出 ---
+build/
+out/
+bin/
+x64/
+Debug/
+Release/
+
+# --- Visual Studio 自动生成 (污染源) ---
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.csproj
+*.db
+*.opendb
+
+# --- VS Code 缓存 ---
+.vscode/
+
+# --- macOS 特有文件 ---
+.DS_Store
+
+# --- CMake 缓存 ---
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
