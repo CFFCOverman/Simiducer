@@ -6,9 +6,9 @@
 class Camera {
 public:
     // 摄像机状态参数
-    float Radius; // 轨道半径
-    float Yaw;    // 偏航角 (左右)
-    float Pitch;  // 俯仰角 (上下)
+    float Radius;     // 轨道半径
+    float Yaw;        // 偏航角 (左右)
+    float Pitch;      // 俯仰角 (上下)
     glm::vec3 Target; // 观察目标 (我们的地球在中心，即 0,0,0)
 
     // 构造函数：设定初始距离和角度
@@ -22,4 +22,7 @@ public:
 
     // 处理鼠标滚轮输入
     void ProcessMouseScroll(float yoffset);
+
+    // 【新增】：获取当前摄像机的 3D 绝对坐标
+    glm::vec3 GetPosition() const;
 };

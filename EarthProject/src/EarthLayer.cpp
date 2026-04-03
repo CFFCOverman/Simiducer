@@ -5,25 +5,26 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Simiducer/Input.h"
 #include "Simiducer/Console.h"
+
 EarthLayer::EarthLayer() {}
 
 EarthLayer::~EarthLayer() {
     delete m_Shader;
     delete m_Earth;
     delete m_Camera;
-    delete m_Texture;          // 【新增】防止内存泄漏
-    delete m_CameraController; // 【新增】防止内存泄漏
+    delete m_Texture;
+    delete m_CameraController;
 }
 
 void EarthLayer::OnAttach() {
-
     Simiducer::Console::Log("[System] EarthLayer initialized successfully.");
     Simiducer::Console::Log("[System] Welcome to Simiducer Engine V3.");
+
     // 1. 初始化摄像机与控制器
     m_Camera = new Camera(3.5f, 0.0f, 0.0f);
     m_CameraController = new Simiducer::CameraController(m_Camera);
 
-    // 2. 加载着色器与模型 (继续使用绝对路径测试)
+    // 2. 加载着色器与模型 
     m_Shader = new Shader("C:/Users/pinyo/source/repos/Simiducer/assets/basic.vert",
         "C:/Users/pinyo/source/repos/Simiducer/assets/basic.frag");
     m_Earth = new Sphere(1.0f, 48, 24);
@@ -36,11 +37,8 @@ void EarthLayer::OnUpdate() {
     // ==========================================
     // 第一部分：处理输入与逻辑更新
     // ==========================================
-
-    // 让控制器更新鼠标拖拽状态 (0.016f 为模拟 60帧 的时间步长)
     m_CameraController->OnUpdate(0.016f);
 
-    // 监听空格键测试神经系统
     if (Simiducer::Input::IsKeyPressed(Simiducer::Key::Space)) {
         Simiducer::Console::Log("[Input] Space key pressed! Time machine activated!");
     }
@@ -48,57 +46,83 @@ void EarthLayer::OnUpdate() {
     // ==========================================
     // 第二部分：准备渲染管线与传递数据
     // ==========================================
-
     m_Shader->use();
 
-    // 绑定贴图并告诉着色器使用 0 号插槽
     m_Texture->Bind(0);
     m_Shader->setInt("texture1", 0);
-
-    // 传递时间机器的年份
     m_Shader->setFloat("u_Year", m_Year);
 
-    // 计算 MVP 矩阵
+    // 摄像机矩阵
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), m_AspectRatio, 0.1f, 100.0f);
     glm::mat4 view = m_Camera->GetViewMatrix();
-
-    glm::mat4 model = glm::mat4(1.0f);
-    // 地球自转逻辑
-    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // 将矩阵传给显卡
     m_Shader->setMat4("projection", projection);
     m_Shader->setMat4("view", view);
+
+    // 【修改】：使用 m_EarthTransform 动态生成模型矩阵
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, m_EarthTransform.Position);
+    // 按 X, Y, Z 轴顺序应用欧拉角旋转
+    model = glm::rotate(model, glm::radians(m_EarthTransform.Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(m_EarthTransform.Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(m_EarthTransform.Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, m_EarthTransform.Scale);
     m_Shader->setMat4("model", model);
+
+    // 【新增】：传递模块化后的太阳光数据
+    m_Shader->setVec3("lightPos", m_Sun.Position);
+    m_Shader->setVec3("lightColor", m_Sun.Color);
+    m_Shader->setFloat("ambientStrength", m_Sun.AmbientStrength);
+    m_Shader->setFloat("specularStrength", m_Sun.SpecularStrength);
+
+    // 传递摄像机位置，用于计算高光
+    m_Shader->setVec3("viewPos", m_Camera->GetPosition());
 
     // ==========================================
     // 第三部分：执行绘制指令
     // ==========================================
-
     m_Earth->draw();
 }
 
 void EarthLayer::OnUIRender() {
-    // 绘制时间机器 UI 面板
+    // ==========================================
+    // 业务逻辑面板
+    // ==========================================
     ImGui::Begin("Time Machine Control");
     ImGui::Text("Engine Architecture V3: Online");
     ImGui::SliderFloat("Year", &m_Year, -2000.0f, 2026.0f);
     ImGui::End();
-    // 【新增】：渲染开发者控制台
+
     Simiducer::Console::Draw("Developer Console");
+
+    // ==========================================
+    // 【新增】：属性检查器面板 (Inspector)
+    // ==========================================
+    ImGui::Begin("Inspector");
+
+    ImGui::Text("--- Directional Light (Sun) ---");
+    ImGui::DragFloat3("Sun Position", &m_Sun.Position.x, 0.1f);
+    ImGui::ColorEdit3("Sun Color", &m_Sun.Color.x);
+    ImGui::SliderFloat("Ambient", &m_Sun.AmbientStrength, 0.0f, 1.0f);
+    ImGui::SliderFloat("Specular", &m_Sun.SpecularStrength, 0.0f, 1.0f);
+
+    ImGui::Separator();
+
+    ImGui::Text("--- Earth Transform ---");
+    // 拖动此处的 Y 轴可以让地球自转
+    ImGui::DragFloat3("Rotation", &m_EarthTransform.Rotation.x, 1.0f);
+    ImGui::DragFloat3("Scale", &m_EarthTransform.Scale.x, 0.01f);
+    ImGui::DragFloat3("Position", &m_EarthTransform.Position.x, 0.05f);
+
+    ImGui::End();
 }
 
 void EarthLayer::OnEvent(Simiducer::Event& event) {
-    // 1. 创建一个事件分发器，把刚刚收到的事件包裹丢进去
     Simiducer::EventDispatcher dispatcher(event);
 
-    // 2. 告诉分发器：如果拆出来发现是 MouseScrolledEvent，就把它交给我的 OnMouseScroll 函数处理
-    // 这里使用了一个 C++ 的 Lambda 表达式作为回调桥梁
     dispatcher.Dispatch<Simiducer::MouseScrolledEvent>(
         [this](Simiducer::MouseScrolledEvent& e) { return OnMouseScroll(e); }
     );
 
-    // 【新增】：告诉分发器，遇到窗口缩放事件，交给 OnWindowResize 处理
     dispatcher.Dispatch<Simiducer::WindowResizeEvent>(
         [this](Simiducer::WindowResizeEvent& e) { return OnWindowResize(e); }
     );
@@ -106,22 +130,15 @@ void EarthLayer::OnEvent(Simiducer::Event& event) {
 
 bool EarthLayer::OnMouseScroll(Simiducer::MouseScrolledEvent& e) {
     if (m_CameraController) {
-        // 从事件包裹中取出 Y 轴的滚动偏移量，传给摄像机控制器
         m_CameraController->Zoom(e.GetYOffset());
     }
-    
-    // 返回 false 表示：虽然我处理了这个事件，但不要拦截它，允许它继续传给底下的其他 Layer 
-    // (如果在写 UI 阻挡点击，这里就可以 return true)
-    return false; 
+    return false;
 }
 
 bool EarthLayer::OnWindowResize(Simiducer::WindowResizeEvent& e) {
-    // 防止除以 0 的崩溃（当窗口被最小化时宽度/高度可能是 0）
     if (e.GetHeight() == 0 || e.GetWidth() == 0) {
         return false;
     }
-
-    // 更新长宽比
     m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
     return false;
 }

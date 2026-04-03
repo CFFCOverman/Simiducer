@@ -1,17 +1,23 @@
-﻿#include "Simiducer/Camera.h"
+﻿#include "Simiducer/Camera.h" // 确保这里是你正确的路径
 #include <cmath>
 
 Camera::Camera(float radius, float yaw, float pitch)
     : Radius(radius), Yaw(yaw), Pitch(pitch), Target(0.0f, 0.0f, 0.0f) {
 }
 
-glm::mat4 Camera::GetViewMatrix() const {
-    // 球面坐标系转换数学
-    float camX = Radius * cosf(Pitch) * sinf(Yaw);
-    float camY = Radius * sinf(Pitch);
-    float camZ = Radius * cosf(Pitch) * cosf(Yaw);
+// 【修复】：必须加上 Camera:: 作用域！
+glm::vec3 Camera::GetPosition() const {
+    glm::vec3 pos;
+    // 统一使用 <cmath> 里的 cosf 和 sinf 处理浮点数
+    pos.x = Target.x + Radius * cosf(Pitch) * sinf(Yaw);
+    pos.y = Target.y + Radius * sinf(Pitch);
+    pos.z = Target.z + Radius * cosf(Pitch) * cosf(Yaw);
+    return pos;
+}
 
-    glm::vec3 position = glm::vec3(camX, camY, camZ) + Target;
+glm::mat4 Camera::GetViewMatrix() const {
+    // 【架构优化】：直接复用刚才写的 GetPosition 函数，代码瞬间清爽！
+    glm::vec3 position = GetPosition();
 
     // 生成并返回 View 矩阵 (摄像机位置，看向目标，Y轴朝上)
     return glm::lookAt(position, Target, glm::vec3(0.0f, 1.0f, 0.0f));

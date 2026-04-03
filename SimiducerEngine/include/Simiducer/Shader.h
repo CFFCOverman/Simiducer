@@ -19,5 +19,9 @@ public:
     // 传给 Shader 一个整数（常用来绑定纹理插槽）
     void setInt(const std::string& name, int value) const;
     void setFloat(const std::string& name, float value) const;
+    // 传 glm::vec3
+    void setVec3(const std::string& name, const glm::vec3& value) const;
+    // 顺便加一个传三个 float 的重载，以后肯定用得上
+    void setVec3(const std::string& name, float x, float y, float z) const;
 };
 
