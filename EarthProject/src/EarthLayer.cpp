@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Simiducer/Input.h"
-
+#include "Simiducer/Console.h"
 EarthLayer::EarthLayer() {}
 
 EarthLayer::~EarthLayer() {
@@ -16,6 +16,9 @@ EarthLayer::~EarthLayer() {
 }
 
 void EarthLayer::OnAttach() {
+
+    Simiducer::Console::Log("[System] EarthLayer initialized successfully.");
+    Simiducer::Console::Log("[System] Welcome to Simiducer Engine V3.");
     // 1. 初始化摄像机与控制器
     m_Camera = new Camera(3.5f, 0.0f, 0.0f);
     m_CameraController = new Simiducer::CameraController(m_Camera);
@@ -39,7 +42,7 @@ void EarthLayer::OnUpdate() {
 
     // 监听空格键测试神经系统
     if (Simiducer::Input::IsKeyPressed(Simiducer::Key::Space)) {
-        std::cout << "Space key pressed! Time machine activated!" << std::endl;
+        Simiducer::Console::Log("[Input] Space key pressed! Time machine activated!");
     }
 
     // ==========================================
@@ -81,6 +84,8 @@ void EarthLayer::OnUIRender() {
     ImGui::Text("Engine Architecture V3: Online");
     ImGui::SliderFloat("Year", &m_Year, -2000.0f, 2026.0f);
     ImGui::End();
+    // 【新增】：渲染开发者控制台
+    Simiducer::Console::Draw("Developer Console");
 }
 
 void EarthLayer::OnEvent(Simiducer::Event& event) {

@@ -9,14 +9,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ==========================================
 include(FetchContent)
 
+# 1. 先声明所有要下载的东西 (Declare everything first)
 FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.3.8)
-FetchContent_MakeAvailable(glfw)
-
 FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TAG 0.9.9.8)
-FetchContent_MakeAvailable(glm)
+# 注意这里改成了 docking 分支
+FetchContent_Declare(imgui GIT_REPOSITORY https://github.com/ocornut/imgui.git GIT_TAG docking)
 
-FetchContent_Declare(imgui GIT_REPOSITORY https://github.com/ocornut/imgui.git GIT_TAG v1.90.4)
-FetchContent_MakeAvailable(imgui)
+# 2. 一次性全部激活 (Make them available)
+FetchContent_MakeAvailable(glfw glm imgui)
+
 
 find_package(OpenGL REQUIRED)
 
