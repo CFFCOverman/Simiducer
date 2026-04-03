@@ -16,5 +16,8 @@ namespace Simiducer {
 
         // 引擎每帧都会调用这个函数（用于渲染 ImGui 时间轴面板）
         virtual void OnUIRender() {}
+
+        // 【新增】：引擎有任何风吹草动（按键、缩放），都会调用这个函数通知图层
+        virtual void OnEvent() {}
     };
 }

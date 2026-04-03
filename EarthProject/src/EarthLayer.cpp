@@ -35,6 +35,15 @@ void EarthLayer::OnUpdate() {
     m_Shader->use();
     m_Shader->setFloat("u_Year", m_Year);
 
+    // ====== 【新增的输入测试】 ======
+      // 如果按下空格键，就在终端打印一句话
+    if (Simiducer::Input::IsKeyPressed(Simiducer::Key::Space)) {
+        std::cout << "Space key pressed! Time machine activated!" << std::endl;
+    }
+    // ===============================
+
+    // ... 后面画地球的代码保持不变 ...
+
     // 【新增】：绑定贴图，并告诉着色器使用 0 号插槽
     m_Texture->Bind();
     m_Shader->setInt("texture1", 0);

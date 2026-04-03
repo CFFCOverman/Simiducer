@@ -9,3 +9,4 @@
 #include "Simiducer/Shader.h"
 #include "Simiducer/Sphere.h"
 #include "Simiducer/Texture.h"
+#include "Simiducer/Input.h"

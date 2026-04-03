@@ -11,7 +11,7 @@ Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount) 
     float stackStep = PI / stackCount;
     float sectorAngle, stackAngle;
 
-    // 1. 生成所有顶点的 3D 坐标
+    // 1. 生成所有顶点的 位置(XYZ)、法线(NX,NY,NZ) 和 贴图坐标(U,V)
     for (unsigned int i = 0; i <= stackCount; ++i) {
         stackAngle = PI / 2 - i * stackStep; // 从北极(pi/2) 到 南极(-pi/2)
         float xy = radius * cosf(stackAngle);
@@ -19,12 +19,24 @@ Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount) 
 
         for (unsigned int j = 0; j <= sectorCount; ++j) {
             sectorAngle = j * sectorStep; // 从 0 到 2pi
+
+            // 位置 (Position)
             float x = xy * cosf(sectorAngle);
             float y = xy * sinf(sectorAngle);
-
             vertices.push_back(x);
             vertices.push_back(y);
             vertices.push_back(z);
+
+            // 法线 (Normal) - 球体的法线就是顶点坐标除以半径
+            vertices.push_back(x / radius);
+            vertices.push_back(y / radius);
+            vertices.push_back(z / radius);
+
+            // 贴图坐标 (TexCoords) - 映射到 0.0 ~ 1.0 之间
+            float u = (float)j / sectorCount;
+            float v = (float)i / stackCount;
+            vertices.push_back(u);
+            vertices.push_back(v);
         }
     }
 
@@ -62,16 +74,26 @@ Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount) 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // 告诉显卡怎么读取顶点 (现在只有 x, y, z，所以跨度是 3 * sizeof(float))
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // 告诉显卡怎么读取顶点 (现在是 8 个 float 一组)
+    int stride = 8 * sizeof(float);
+
+    // 0 号插槽：位置 (X, Y, Z)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
 
-    glBindVertexArray(0); // 解绑 VAO 保护数据
+    // 1 号插槽：法线 (NX, NY, NZ)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // 2 号插槽：贴图坐标 (U, V)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
 }
 
 void Sphere::draw() const {
     glBindVertexArray(VAO);
-    // 使用 glDrawElements 而不是 glDrawArrays，因为我们使用了索引(EBO)来复用顶点
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
@@ -81,4 +103,3 @@ void Sphere::destroy() {
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
-

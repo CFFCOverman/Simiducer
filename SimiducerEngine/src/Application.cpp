@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-
+GLFWwindow* g_Window = nullptr;
 namespace Simiducer {
     Application::Application() {
         glfwInit();
@@ -12,6 +12,7 @@ namespace Simiducer {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         m_Window = glfwCreateWindow(1280, 720, "Simiducer Engine V3.0", nullptr, nullptr);
+        g_Window = m_Window; // 【新增这行】记录全局指针
         glfwMakeContextCurrent(m_Window);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
